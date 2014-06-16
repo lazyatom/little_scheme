@@ -1,38 +1,38 @@
 class List
-  attr_reader :array
+  attr_reader :elements
 
-  def initialize(*array)
-    @array = array
+  def initialize(*elements)
+    @elements = elements
   end
 
   def ==(other)
-    other.array == array
+    other.elements == elements
   end
 
   def evaluate(env)
-    return self if array.empty?
-    operation, *arguments = array
+    return self if elements.empty?
+    operation, *arguments = elements
     result = operation.evaluate(env)
     result.apply(env, *arguments)
   end
 
   def inspect
-    "<List: (#{@array.map { |m| m.inspect }.join(' ')})>"
+    "<List: (#{@elements.map { |m| m.inspect }.join(' ')})>"
   end
 
   def empty?
-    array.empty?
+    elements.empty?
   end
 
   def first
-    array.first
+    elements.first
   end
 
   def rest
-    array[1..-1]
+    elements[1..-1]
   end
 
   def all?(&block)
-    array.all?(&block)
+    elements.all?(&block)
   end
 end

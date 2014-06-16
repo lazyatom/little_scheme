@@ -33,7 +33,7 @@ module SyntaxMatchers
 
   matcher :contain_the_s_expressions do |*expected|
     match do |string|
-      parse_s_expression(string).array == expected.map(&method(:parse_s_expression))
+      elements_in(parse_s_expression(string)) == expected.map(&method(:parse_s_expression))
     end
   end
 

@@ -51,7 +51,7 @@ module LittleScheme
       def apply(env, thing, list)
         x = thing.evaluate(env)
         y = list.evaluate(env)
-        List.new(x, *y.array)
+        List.new(x, *y.elements)
       end
     end
 
@@ -62,7 +62,7 @@ module LittleScheme
 
       class Compiled
         def initialize(parameters, s_expression)
-          @parameter_names = parameters.array.map(&:symbol)
+          @parameter_names = parameters.elements.map(&:symbol)
           @s_expression = s_expression
         end
 
@@ -77,7 +77,7 @@ module LittleScheme
     class Cond
       def apply(env, *conditions)
         conditions.each do |condition_expression|
-          condition, result = condition_expression.array
+          condition, result = condition_expression.elements
           evaluated = condition.evaluate(env)
           if evaluated == True || evaluated.is_a?(Else)
             return result.evaluate(env)

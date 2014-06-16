@@ -136,7 +136,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |atom|
-      evaluate(lat).array.include?(evaluate(atom))
+      elements_in(evaluate(lat)).include?(evaluate(atom))
     end
   end
 end
