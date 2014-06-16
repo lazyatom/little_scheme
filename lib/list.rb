@@ -20,10 +20,6 @@ class List
     "<List: (#{@array.map { |m| m.inspect }.join(' ')})>"
   end
 
-  def apply(env)
-    self
-  end
-
   def empty?
     array.empty?
   end
