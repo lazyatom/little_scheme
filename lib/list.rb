@@ -1,48 +1,42 @@
-require 'lambda'
-
 class List
+  attr_reader :array
+
   def initialize(*array)
     @array = array
   end
 
-  def evaluate(env)
-    operation, *arguments = array
-    operation.evaluate(env).apply(env, arguments)
-  end
-
-  def car
-    raise if @array.empty?
-    @array.first
-  end
-
-  def cdr
-    raise if @array.empty?
-    self.class.new(*@array[1..-1])
-  end
-
-  def cons(list)
-    list.prepend(self)
-  end
-
-  def prepend(sexp)
-    List.new(sexp, *array)
-  end
-
-  def null?
-    Atom.from_boolean(array.empty?)
-  end
-
-  def atom?
-    Atom::FALSE
-  end
-
   def ==(other)
-    other.is_a?(List) && self.array == other.array
+    other.array == array
+  end
+
+  def evaluate(env)
+    return self if array.empty?
+    operation, *arguments = array
+    result = operation.evaluate(env)
+    result.apply(env, *arguments)
   end
 
   def inspect
-    "(#{@array.map(&:inspect).join(' ')})"
+    "<List: (#{@array.map { |m| m.inspect }.join(' ')})>"
   end
 
-  attr_reader :array
+  def apply(env)
+    self
+  end
+
+  def empty?
+    array.empty?
+  end
+
+  def first
+    array.first
+  end
+
+  def rest
+    array[1..-1]
+  end
+
+  def all?(&block)
+    array.all?(&block)
+  end
 end

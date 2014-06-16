@@ -1,9 +1,11 @@
 require 'support/helpers/evaluate_helper'
 require 'support/helpers/parse_helper'
+require 'support/helpers/scheme_method_helper'
 
 module SemanticsMatchers
   include EvaluateHelper
   include ParseHelper
+  include SchemeMethodHelper
   extend RSpec::Matchers::DSL
 
   module EvaluatingMatcher
@@ -57,7 +59,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |actual|
-      evaluate(actual).car == parse_s_expression(expected)
+      car_of(evaluate(actual)) == parse_s_expression(expected)
     end
   end
 
@@ -66,7 +68,7 @@ module SemanticsMatchers
 
     match do |actual|
       begin
-        evaluate(actual).car
+        car_of(evaluate(actual))
         false
       rescue
         true
@@ -78,7 +80,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |actual|
-      evaluate(actual).cdr == parse_s_expression(expected)
+      cdr_of(evaluate(actual)) == parse_s_expression(expected)
     end
   end
 
@@ -86,7 +88,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |car|
-      evaluate(car).cons(evaluate(cdr)) == parse_s_expression(expected)
+      cons_of(evaluate(car), evaluate(cdr)) == parse_s_expression(expected)
     end
 
     chain :to_make do |expected|
@@ -110,7 +112,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |actual|
-      evaluate(actual).null?
+      is_null?(evaluate(actual))
     end
   end
 
