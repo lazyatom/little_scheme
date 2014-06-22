@@ -47,7 +47,7 @@ module SyntaxMatchers
   matcher :be_a_tup do
     match do |string|
       s_expression = parse_s_expression(string)
-      s_expression.array.all? { |s_expression| s_expression.is_a?(Atom) && s_expression.number? == Atom::TRUE }
+      elements_in(s_expression).all? { |s_expression| s_expression.is_a?(Atom) && is_a_number?(s_expression) }
     end
   end
 end

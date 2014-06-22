@@ -26,4 +26,8 @@ module SchemeMethodHelper
     raise "not a List!" unless evaluated_scheme.is_a?(List)
     evaluated_scheme.elements
   end
+
+  def is_a_number?(evaluated_scheme)
+    evaluated_scheme.is_a?(Atom) && evaluated_scheme.numerical?
+  end
 end

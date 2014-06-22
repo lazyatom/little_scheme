@@ -104,6 +104,43 @@ module LittleScheme
       end
     end
 
+    class And
+      def apply(env, *conditions)
+        conditions.all? do |condition_expression|
+          condition_expression.evaluate(env) == True
+        end ? True : False
+      end
+    end
+
+    class Add1
+      def apply(env, number_expression)
+        actual_number = number_expression.evaluate(env)
+        Atom.new((actual_number.raw_value + 1).to_s)
+      end
+    end
+
+    class Sub1
+      def apply(env, number_expression)
+        actual_number = number_expression.evaluate(env)
+        value = actual_number.raw_value
+        raise if value < 1
+        Atom.new((value - 1).to_s)
+      end
+    end
+
+    class IsZero
+      def apply(env, number_expression)
+        actual_number = number_expression.evaluate(env)
+        actual_number.raw_value == 0 ? True : False
+      end
+    end
+
+    class IsNumber
+      def apply(env, number_expression)
+        number_expression.evaluate(env).numerical? ? True : False
+      end
+    end
+
     def evaluate(s_expression, environment)
       environment = {
         :'#t' => LittleScheme::True,
@@ -119,7 +156,12 @@ module LittleScheme
         lambda: Lambda.new,
         cond: Cond.new,
         :'else' => Else.new,
-        :'or' => Or.new
+        :'or' => Or.new,
+        :'and' => And.new,
+        add1: Add1.new,
+        sub1: Sub1.new,
+        zero?: IsZero.new,
+        number?: IsNumber.new
       }.merge(environment)
 
       s_expression.evaluate(environment)
