@@ -10,11 +10,7 @@ class Atom
   end
 
   def evaluate(env)
-    if numerical?
-      self
-    else
-      env.fetch(symbol)
-    end
+    env.fetch(symbol, self)
   end
 
   def inspect
