@@ -1,57 +1,13 @@
 module LittleScheme
   class Evaluator
-    class Car
-      def apply(env, s_expression)
-        list = s_expression.evaluate(env)
-        raise if list.empty?
-        list.first
+    class Operation
+      def initialize(&block)
+        @block = block
       end
-    end
 
-    class Cdr
-      def apply(env, s_expression)
-        list = s_expression.evaluate(env)
-        raise if list.empty?
-        List.new(*list.rest)
-      end
-    end
-
-    class IsNull
-      def apply(env, s_expression)
-        x = s_expression.evaluate(env)
-        raise unless x.is_a?(List)
-        x.empty? ? True : False
-      end
-    end
-
-    class IsAtom
-      def apply(env, atom)
-        x = atom.evaluate(env)
-        x.is_a?(Atom) ? True : False
-      end
-    end
-
-    class IsEq
-      def apply(env, atom1, atom2)
-        x = atom1.evaluate(env)
-        y = atom2.evaluate(env)
-        raise unless x.is_a?(Atom) && x.non_numerical? &&
-                     y.is_a?(Atom) && y.non_numerical?
-        x.symbol == y.symbol ? True : False
-      end
-    end
-
-    class Quote
-      def apply(env, *args)
-        List.new
-      end
-    end
-
-    class Cons
-      def apply(env, thing, list)
-        x = thing.evaluate(env)
-        y = list.evaluate(env)
-        List.new(x, *y.elements)
+      def apply(env, *arguments)
+        evaluated_arguments = arguments.map { |a| a.evaluate(env) }
+        @block.call(*evaluated_arguments)
       end
     end
 
@@ -112,57 +68,60 @@ module LittleScheme
       end
     end
 
-    class Add1
-      def apply(env, number_expression)
-        actual_number = number_expression.evaluate(env)
-        Atom.new((actual_number.raw_value + 1).to_s)
-      end
-    end
-
-    class Sub1
-      def apply(env, number_expression)
-        actual_number = number_expression.evaluate(env)
-        value = actual_number.raw_value
-        raise if value < 1
-        Atom.new((value - 1).to_s)
-      end
-    end
-
-    class IsZero
-      def apply(env, number_expression)
-        actual_number = number_expression.evaluate(env)
-        actual_number.raw_value == 0 ? True : False
-      end
-    end
-
-    class IsNumber
-      def apply(env, number_expression)
-        number_expression.evaluate(env).numerical? ? True : False
-      end
-    end
-
     def evaluate(s_expression, environment)
+      operations = {
+        car: Operation.new do |list|
+          raise if list.empty?
+          list.first
+        end,
+        cdr: Operation.new do |list|
+          raise if list.empty?
+          List.new(*list.rest)
+        end,
+        cons: Operation.new do |thing, list|
+          List.new(thing, *list.elements)
+        end,
+        null?: Operation.new do |list|
+          raise unless list.is_a?(List)
+          list.empty? ? True : False
+        end,
+        atom?: Operation.new do |atom|
+          atom.is_a?(Atom) ? True : False
+        end,
+        eq?: Operation.new do |atom1, atom2|
+          raise unless atom1.is_a?(Atom) && atom1.non_numerical? &&
+                       atom2.is_a?(Atom) && atom2.non_numerical?
+          atom1.symbol == atom2.symbol ? True : False
+        end,
+        quote: Operation.new do
+          List.new
+        end,
+        add1: Operation.new do |atom|
+          Atom.new((atom.raw_value + 1).to_s)
+        end,
+        sub1: Operation.new do |atom|
+          value = atom.raw_value
+          raise if value < 1
+          Atom.new((value - 1).to_s)
+        end,
+        zero?: Operation.new do |atom|
+          atom.raw_value == 0 ? True : False
+        end,
+        number?: Operation.new do |atom|
+          atom.numerical? ? True : False
+        end
+      }
+
       environment = {
         :'#t' => LittleScheme::True,
         :'#f' => LittleScheme::False,
 
-        car: Car.new,
-        cdr: Cdr.new,
-        cons: Cons.new,
-        null?: IsNull.new,
-        atom?: IsAtom.new,
-        eq?: IsEq.new,
-        quote: Quote.new,
         lambda: Lambda.new,
         cond: Cond.new,
         :'else' => Else.new,
         :'or' => Or.new,
-        :'and' => And.new,
-        add1: Add1.new,
-        sub1: Sub1.new,
-        zero?: IsZero.new,
-        number?: IsNumber.new
-      }.merge(environment)
+        :'and' => And.new
+      }.merge(operations).merge(environment)
 
       s_expression.evaluate(environment)
     end
