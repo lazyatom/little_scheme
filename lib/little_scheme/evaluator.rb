@@ -124,9 +124,9 @@ module LittleScheme
 
         lambda: Lambda.new,
         cond: Cond.new,
-        :'else' => Else.new,
-        :'or' => Or.new,
-        :'and' => And.new
+        else: Else.new,
+        or: Or.new,
+        and: And.new
       }.merge(operations).merge(environment)
 
       s_expression.evaluate(environment)
