@@ -11,6 +11,12 @@ module LittleScheme
       end
     end
 
+    class BooleanOperation < Operation
+      def apply(env, *arguments)
+        super(env, *arguments) ? True : False
+      end
+    end
+
     class Lambda
       def apply(env, parameters, s_expression)
         Compiled.new(parameters, s_expression)
@@ -81,17 +87,17 @@ module LittleScheme
         cons: Operation.new do |thing, list|
           List.new(thing, *list.elements)
         end,
-        null?: Operation.new do |list|
+        null?: BooleanOperation.new do |list|
           raise unless list.is_a?(List)
-          list.empty? ? True : False
+          list.empty?
         end,
-        atom?: Operation.new do |atom|
-          atom.is_a?(Atom) ? True : False
+        atom?: BooleanOperation.new do |atom|
+          atom.is_a?(Atom)
         end,
-        eq?: Operation.new do |atom1, atom2|
+        eq?: BooleanOperation.new do |atom1, atom2|
           raise unless atom1.is_a?(Atom) && atom1.non_numerical? &&
                        atom2.is_a?(Atom) && atom2.non_numerical?
-          atom1.symbol == atom2.symbol ? True : False
+          atom1.symbol == atom2.symbol
         end,
         quote: Operation.new do
           List.new
@@ -104,11 +110,11 @@ module LittleScheme
           raise if value < 1
           Atom.new((value - 1).to_s)
         end,
-        zero?: Operation.new do |atom|
-          atom.raw_value == 0 ? True : False
+        zero?: BooleanOperation.new do |atom|
+          atom.raw_value == 0
         end,
-        number?: Operation.new do |atom|
-          atom.numerical? ? True : False
+        number?: BooleanOperation.new do |atom|
+          atom.numerical?
         end
       }
 
