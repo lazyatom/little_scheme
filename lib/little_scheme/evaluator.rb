@@ -76,46 +76,21 @@ module LittleScheme
 
     def evaluate(s_expression, environment)
       operations = {
-        car: Operation.new do |list|
-          raise if list.empty?
-          list.first
-        end,
-        cdr: Operation.new do |list|
-          raise if list.empty?
-          List.new(*list.rest)
-        end,
-        cons: Operation.new do |thing, list|
-          List.new(thing, *list.elements)
-        end,
-        null?: BooleanOperation.new do |list|
-          raise unless list.is_a?(List)
-          list.empty?
-        end,
-        atom?: BooleanOperation.new do |atom|
-          atom.is_a?(Atom)
-        end,
-        eq?: BooleanOperation.new do |atom1, atom2|
+        car:   Operation.new { |list| list.empty? ? raise : list.first },
+        cdr:   Operation.new { |list| list.empty? ? raise : List.new(*list.rest) },
+        cons:  Operation.new { |thing, list| List.new(thing, *list.elements) },
+        null?:   BooleanOperation.new { |list| list.is_a?(List) ? list.empty? : raise },
+        atom?:   BooleanOperation.new { |atom| atom.is_a?(Atom) },
+        zero?:   BooleanOperation.new { |atom| atom.raw_value == 0 },
+        number?: BooleanOperation.new { |atom| atom.numerical? },
+        eq?:     BooleanOperation.new do |atom1, atom2|
           raise unless atom1.is_a?(Atom) && atom1.non_numerical? &&
                        atom2.is_a?(Atom) && atom2.non_numerical?
           atom1.symbol == atom2.symbol
         end,
-        quote: Operation.new do
-          List.new
-        end,
-        add1: Operation.new do |atom|
-          Atom.new((atom.raw_value + 1).to_s)
-        end,
-        sub1: Operation.new do |atom|
-          value = atom.raw_value
-          raise if value < 1
-          Atom.new((value - 1).to_s)
-        end,
-        zero?: BooleanOperation.new do |atom|
-          atom.raw_value == 0
-        end,
-        number?: BooleanOperation.new do |atom|
-          atom.numerical?
-        end
+        quote: Operation.new { List.new },
+        add1: Operation.new { |atom| Atom.new(atom.raw_value + 1) },
+        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise : Atom.new(atom.raw_value - 1) }
       }
 
       environment = {
