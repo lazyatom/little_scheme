@@ -144,7 +144,7 @@ module SemanticsMatchers
     include EvaluatingMatcher
 
     match do |actual|
-      evaluate(actual).atom?
+      is_an_atom?(evaluate(actual))
     end
   end
 end
