@@ -16,6 +16,15 @@ module LittleScheme
     def to_ast
       ParseTransform.new.apply(@tree)
     end
+
+    def s_expressions
+      ast = to_ast
+      if ast.is_a?(Array)
+        ast
+      else
+        [ast]
+      end
+    end
   end
 
   class ParseTransform < Parslet::Transform
@@ -33,10 +42,17 @@ module LittleScheme
     rule(:_false) { str('#f').as(:false) }
     rule(:_true) { str('#t').as(:true) }
 
+    rule(:multiplication) { str('*') }
+    rule(:addition) { str('+') }
+    rule(:exponent) { str('expt') }
+    rule(:arithmetic_operation) { multiplication | addition | exponent }
+
     rule(:atom) { match('[^()\s]').repeat(1).as(:atom) }
     rule(:list) { str('(') >> (s_expression >> space?).repeat(0).as(:list) >> str(')') }
-    rule(:s_expression) { _false | _true | atom | list }
+    rule(:s_expression) { _false | _true | atom | list | arithmetic_operation }
 
-    root(:s_expression)
+    rule(:program) { s_expression >> (space >> s_expression).repeat(0) }
+
+    root(:program)
   end
 end

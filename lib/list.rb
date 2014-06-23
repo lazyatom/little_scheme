@@ -20,6 +20,10 @@ class List
     "<List: (#{@elements.map { |m| m.inspect }.join(' ')})>"
   end
 
+  def to_s
+    "(#{@elements.join(' ')})"
+  end
+
   def empty?
     elements.empty?
   end

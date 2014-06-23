@@ -17,6 +17,11 @@ class Atom
     "<Atom: #{@symbol}>"
   end
 
+  def name
+    symbol.to_s
+  end
+  alias :to_s :name
+
   def raw_value
     if numerical?
       numerical_value

@@ -33,6 +33,14 @@ module LittleScheme
           local_env = env.merge(Hash[@parameter_names.zip(evaluated_arguments)])
           @s_expression.evaluate(local_env)
         end
+
+        def inspect
+          "<Lambda (#{@parameter_names}) #{@s_expression}>"
+        end
+
+        def to_s
+          "(lambda) (#{@parameter_names.join(' ')}) #{@s_expression})"
+        end
       end
     end
 
@@ -74,23 +82,29 @@ module LittleScheme
       end
     end
 
+    class Quote
+      def apply(env, thing)
+        thing
+      end
+    end
+
     def evaluate(s_expression, environment)
       operations = {
-        car:   Operation.new { |list| list.empty? ? raise : list.first },
-        cdr:   Operation.new { |list| list.empty? ? raise : List.new(*list.rest) },
+        car:   Operation.new { |list| list.empty? ? raise("car error on #{list}") : list.first },
+        cdr:   Operation.new { |list| list.empty? ? raise("cdr error on #{list}") : List.new(*list.rest) },
         cons:  Operation.new { |thing, list| List.new(thing, *list.elements) },
-        null?:   BooleanOperation.new { |list| list.is_a?(List) ? list.empty? : raise },
+        null?:   BooleanOperation.new { |list| list.is_a?(List) ? list.empty? : raise("null? error on #{list}") },
         atom?:   BooleanOperation.new { |atom| atom.is_a?(Atom) },
         zero?:   BooleanOperation.new { |atom| atom.raw_value == 0 },
         number?: BooleanOperation.new { |atom| atom.numerical? },
         eq?:     BooleanOperation.new do |atom1, atom2|
-          raise unless atom1.is_a?(Atom) && atom1.non_numerical? &&
+          raise("eq? error on [#{atom1}] vs [#{atom2}]") unless atom1.is_a?(Atom) && atom1.non_numerical? &&
                        atom2.is_a?(Atom) && atom2.non_numerical?
           atom1.symbol == atom2.symbol
         end,
-        quote: Operation.new { List.new },
+        quote: Quote.new,
         add1: Operation.new { |atom| Atom.new(atom.raw_value + 1) },
-        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise : Atom.new(atom.raw_value - 1) }
+        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise("sub1 error on #{atom}") : Atom.new(atom.raw_value - 1) }
       }
 
       environment = {

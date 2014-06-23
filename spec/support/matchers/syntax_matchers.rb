@@ -53,11 +53,11 @@ module SyntaxMatchers
 
   matcher :be_an_arithmetic_expression do
     def arithmetic_expression?(s_expressions)
-      if s_expressions.length == 1 && s_expressions.first.atom?
+      if s_expressions.length == 1 && is_an_atom?(s_expressions.first)
         true
       elsif s_expressions.length >= 3
         first, op, *rest = s_expressions
-        arithmetic_expression?([first]) && arithmetic_expression?(rest) && op.atom? && %w(+ * expt).include?(op.name)
+        arithmetic_expression?([first]) && arithmetic_expression?(rest) && is_an_atom?(op) && %w(+ * expt).include?(op.name)
       end
     end
 
