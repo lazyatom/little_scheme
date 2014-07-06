@@ -9,6 +9,14 @@ class List
     other.elements == elements
   end
 
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    elements.map(&:hash).hash
+  end
+
   def evaluate(env)
     return self if elements.empty?
     operation, *arguments = elements

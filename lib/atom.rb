@@ -9,6 +9,14 @@ class Atom
     other.symbol == symbol
   end
 
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    @symbol.hash
+  end
+
   def evaluate(env)
     env.fetch(symbol, self)
   end
