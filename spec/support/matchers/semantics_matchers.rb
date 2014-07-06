@@ -153,9 +153,9 @@ module SemanticsMatchers
 
     match do |actual|
       s_expression = evaluate(actual)
-      s_expression.list? &&
-        s_expression.s_expressions.all? { |element| element.list? && element.s_expressions.length == 2 } &&
-        s_expression.s_expressions.length == s_expression.s_expressions.uniq.length
+      is_a_list?(s_expression) &&
+        s_expressions_in_list(s_expression).all? { |element| is_a_list?(element) && s_expressions_in_list(element).length == 2 } &&
+        s_expressions_in_list(s_expression).length == s_expressions_in_list(s_expression).uniq.length
     end
   end
 
@@ -165,7 +165,7 @@ module SemanticsMatchers
     match do |actual|
       s_expression = evaluate(actual)
       evaluate_to_a_rel.where(environment).matches?(actual) &&
-        s_expression.s_expressions.length == s_expression.s_expressions.map { |element| element.s_expressions.first }.uniq.length
+        s_expressions_in_list(s_expression).length == s_expressions_in_list(s_expression).map { |element| s_expressions_in_list(element).first }.uniq.length
     end
   end
 
@@ -175,7 +175,7 @@ module SemanticsMatchers
     match do |actual|
       s_expression = evaluate(actual)
       evaluate_to_a_fun.where(environment).matches?(actual) &&
-        s_expression.s_expressions.length == s_expression.s_expressions.map { |element| element.s_expressions[1] }.uniq.length
+        s_expressions_in_list(s_expression).length == s_expressions_in_list(s_expression).map { |element| s_expressions_in_list(element)[1] }.uniq.length
     end
   end
 end

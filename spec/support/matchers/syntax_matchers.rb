@@ -70,16 +70,16 @@ module SyntaxMatchers
   matcher :be_a_set do
     match do |string|
       s_expressions = parse_program(string).s_expressions
-      s_expressions.length == 1 && s_expressions.first.list? &&
-        s_expressions.first.s_expressions.length == s_expressions.first.s_expressions.uniq.length
+      s_expressions.length == 1 && is_a_list?(s_expressions.first) &&
+        s_expressions_in_list(s_expressions.first).length == s_expressions_in_list(s_expressions.first).uniq.length
     end
   end
 
   matcher :be_a_pair do
     match do |string|
       s_expressions = parse_program(string).s_expressions
-      s_expressions.length == 1 && s_expressions.first.list? &&
-        s_expressions.first.s_expressions.length == 2
+      s_expressions.length == 1 && is_a_list?(s_expressions.first) &&
+        s_expressions_in_list(s_expressions.first).length == 2
     end
   end
 end

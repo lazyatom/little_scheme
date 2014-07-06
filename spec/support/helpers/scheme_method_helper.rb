@@ -34,4 +34,12 @@ module SchemeMethodHelper
   def is_an_atom?(evaluated_scheme)
     evaluated_scheme.is_a?(Atom)
   end
+
+  def is_a_list?(evaluated_scheme)
+    evaluated_scheme.is_a?(List)
+  end
+
+  def s_expressions_in_list(evaluated_scheme)
+    elements_in(evaluated_scheme)
+  end
 end
