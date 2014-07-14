@@ -20,12 +20,17 @@ class List
   def evaluate(env)
     return self if elements.empty?
     operation, *arguments = elements
-    result = operation.evaluate(env)
-    result.apply(env, *arguments)
+    result = debug evaluating_list: to_s, env: env do
+      operation.evaluate(env)
+    end
+    debug applying_list_result: result do
+      result.apply(env, *arguments)
+    end
   end
 
   def inspect
-    "<List: (#{@elements.map { |m| m.inspect }.join(' ')})>"
+    # "<List: (#{@elements.map { |m| m.inspect }.join(' ')})>"
+    to_s
   end
 
   def to_s

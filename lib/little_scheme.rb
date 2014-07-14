@@ -1,5 +1,6 @@
 require 'atom'
 require 'list'
+require 'debug'
 
 module LittleScheme
   True = Atom.new('#t')

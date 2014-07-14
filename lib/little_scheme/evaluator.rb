@@ -9,6 +9,11 @@ module LittleScheme
         evaluated_arguments = arguments.map { |a| a.evaluate(env) }
         @block.call(*evaluated_arguments)
       end
+
+      def to_s
+        self.class.name
+      end
+      alias :inspect :to_s
     end
 
     class BooleanOperation < Operation
@@ -19,8 +24,15 @@ module LittleScheme
 
     class Lambda
       def apply(env, parameters, s_expression)
-        Compiled.new(parameters, s_expression)
+        debug applying_lambda: parameters, s_expression: s_expression, env: env do
+          Compiled.new(parameters, s_expression)
+        end
       end
+
+      def to_s
+        "Lambda"
+      end
+      alias :inspect :to_s
 
       class Compiled
         def initialize(parameters, s_expression)
@@ -29,28 +41,33 @@ module LittleScheme
         end
 
         def apply(env, *arguments)
-          evaluated_arguments = arguments.map { |a| a.evaluate(env) }
-          local_env = env.merge(Hash[@parameter_names.zip(evaluated_arguments)])
-          @s_expression.evaluate(local_env)
-        end
-
-        def inspect
-          "<Lambda (#{@parameter_names}) #{@s_expression}>"
+          debug applying_compiled_lambda: @s_expression, env: env do
+            evaluated_arguments = arguments.map { |a| a.evaluate(env) }
+            local_env = env.merge(Hash[@parameter_names.zip(evaluated_arguments)])
+            @s_expression.evaluate(local_env)
+          end
         end
 
         def to_s
-          "(lambda) (#{@parameter_names.join(' ')}) #{@s_expression})"
+          "(lambda/compiled (#{@parameter_names.join(' ')}) #{@s_expression})"
         end
+        alias :inspect :to_s
       end
     end
 
     class Cond
       def apply(env, *conditions)
+        debug cond_conditions: conditions.count
         conditions.each do |condition_expression|
           condition, result = condition_expression.elements
+          debug condition: condition, result: result
           evaluated = condition.evaluate(env)
+          debug evaluated_condition: evaluated
           if evaluated == True || evaluated.is_a?(Else)
-            return result.evaluate(env)
+            debug evaluating_cond_result: result
+            evaluated_result = result.evaluate(env)
+            debug returning_evaluated_result: evaluated_result
+            return evaluated_result
           end
         end
       end
@@ -88,8 +105,8 @@ module LittleScheme
       end
     end
 
-    def evaluate(s_expression, environment)
-      operations = {
+    def default_environment
+      {
         car:   Operation.new { |list| list.empty? ? raise("car error on #{list}") : list.first },
         cdr:   Operation.new { |list| list.empty? ? raise("cdr error on #{list}") : List.new(*list.rest) },
         cons:  Operation.new { |thing, list| List.new(thing, *list.elements) },
@@ -104,10 +121,8 @@ module LittleScheme
         end,
         quote: Quote.new,
         add1: Operation.new { |atom| Atom.new(atom.raw_value + 1) },
-        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise("sub1 error on #{atom}") : Atom.new(atom.raw_value - 1) }
-      }
+        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise("sub1 error on #{atom}") : Atom.new(atom.raw_value - 1) },
 
-      environment = {
         :'#t' => LittleScheme::True,
         :'#f' => LittleScheme::False,
 
@@ -116,7 +131,11 @@ module LittleScheme
         else: Else.new,
         or: Or.new,
         and: And.new
-      }.merge(operations).merge(environment)
+      }
+    end
+
+    def evaluate(s_expression, environment)
+      environment = default_environment.merge(environment)
 
       s_expression.evaluate(environment)
     end

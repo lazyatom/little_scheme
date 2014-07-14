@@ -18,17 +18,16 @@ class Atom
   end
 
   def evaluate(env)
-    env.fetch(symbol, self)
-  end
-
-  def inspect
-    "<Atom: #{@symbol}>"
+    debug(evaluate_atom: symbol, env: env) do
+      env.fetch(symbol, self)
+    end
   end
 
   def name
     symbol.to_s
   end
   alias :to_s :name
+  alias :inspect :name
 
   def raw_value
     if numerical?
