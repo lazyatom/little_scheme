@@ -1,7 +1,8 @@
 module LittleScheme
   class Evaluator
     class Operation
-      def initialize(&block)
+      def initialize(name = nil, &block)
+        @name = name
         @block = block
       end
 
@@ -11,7 +12,7 @@ module LittleScheme
       end
 
       def to_s
-        self.class.name
+        "operation/#{@name}"
       end
       alias :inspect :to_s
     end
@@ -50,10 +51,18 @@ module LittleScheme
         end
 
         def apply(env, *arguments)
-          debug applying_compiled_lambda: @s_expression, env: env do
+          debug applying_compiled_lambda: @s_expression, parameter_names: @parameter_names, env: env do
+            debug message: 'evaluating compiled lambda arguments: ', arguments: arguments
             evaluated_arguments = arguments.map { |a| a.evaluate(env) }
-            local_env = env.merge(@original_env).merge(Hash[@parameter_names.zip(evaluated_arguments)])
-            @s_expression.evaluate(local_env)
+            debug parameter_names: @parameter_names, evaluated_arguments: evaluated_arguments
+            argument_environment = Hash[@parameter_names.zip(evaluated_arguments)]
+            argument_environment.delete_if { |_,v| v.nil? }
+            debug original_env: true, env: @original_env
+            local_env = env.merge(@original_env).merge(argument_environment)
+            debug evaluating_s_expression: @s_expression, env: local_env
+            r = @s_expression.evaluate(local_env)
+            debug result: r
+            r
           end
         end
 
@@ -69,14 +78,13 @@ module LittleScheme
         debug cond_conditions: conditions.count
         conditions.each do |condition_expression|
           condition, result = condition_expression.elements
-          debug condition: condition, result: result
-          evaluated = condition.evaluate(env)
-          debug evaluated_condition: evaluated
+          evaluated = debug evaluating_condition: condition, result: result do
+            condition.evaluate(env)
+          end
           if evaluated == True || evaluated.is_a?(Else)
-            debug evaluating_cond_result: result
-            evaluated_result = result.evaluate(env)
-            debug returning_evaluated_result: evaluated_result
-            return evaluated_result
+            return debug evaluating_cond_result: result do
+              evaluated_result = result.evaluate(env)
+            end
           end
         end
       end
@@ -116,21 +124,21 @@ module LittleScheme
 
     def default_environment
       {
-        car:   Operation.new { |list| list.empty? ? raise("car error on #{list}") : list.first },
-        cdr:   Operation.new { |list| list.empty? ? raise("cdr error on #{list}") : List.new(*list.rest) },
-        cons:  Operation.new { |thing, list| List.new(thing, *list.elements) },
-        null?:   BooleanOperation.new { |list| list.is_a?(List) ? list.empty? : raise("null? error on #{list}") },
-        atom?:   BooleanOperation.new { |atom| atom.is_a?(Atom) },
-        zero?:   BooleanOperation.new { |atom| atom.raw_value == 0 },
-        number?: BooleanOperation.new { |atom| atom.numerical? },
-        eq?:     BooleanOperation.new do |atom1, atom2|
+        car:   Operation.new(:car)  { |list| list.empty? ? raise("car error on #{list}") : list.first },
+        cdr:   Operation.new(:cdr)  { |list| list.empty? ? raise("cdr error on #{list}") : List.new(*list.rest) },
+        cons:  Operation.new(:cons) { |thing, list| List.new(thing, *list.elements) },
+        null?:   BooleanOperation.new(:null?) { |list| list.is_a?(List) ? list.empty? : raise("null? error on #{list}") },
+        atom?:   BooleanOperation.new(:atom?) { |atom| atom.is_a?(Atom) },
+        zero?:   BooleanOperation.new(:zero?) { |atom| atom.raw_value == 0 },
+        number?: BooleanOperation.new(:number?) { |atom| atom.numerical? },
+        eq?:     BooleanOperation.new(:eq?) do |atom1, atom2|
           raise("eq? error on [#{atom1}] vs [#{atom2}]") unless atom1.is_a?(Atom) && atom1.non_numerical? &&
                        atom2.is_a?(Atom) && atom2.non_numerical?
           atom1.symbol == atom2.symbol
         end,
         quote: Quote.new,
-        add1: Operation.new { |atom| Atom.new(atom.raw_value + 1) },
-        sub1: Operation.new { |atom| atom.raw_value < 1 ? raise("sub1 error on #{atom}") : Atom.new(atom.raw_value - 1) },
+        add1: Operation.new(:add1) { |atom| Atom.new(atom.raw_value + 1) },
+        sub1: Operation.new(:sub1) { |atom| atom.raw_value < 1 ? raise("sub1 error on #{atom}") : Atom.new(atom.raw_value - 1) },
 
         :'#t' => LittleScheme::True,
         :'#f' => LittleScheme::False,
