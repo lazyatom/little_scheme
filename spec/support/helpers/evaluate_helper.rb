@@ -6,6 +6,6 @@ module EvaluateHelper
   end
 
   def evaluate_s_expression(s_expression, environment)
-    evaluate_program(s_expression, environment)
+    evaluate_program(s_expression, environment).result
   end
 end

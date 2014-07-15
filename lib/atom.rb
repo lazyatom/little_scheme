@@ -23,6 +23,18 @@ class Atom
     end
   end
 
+  def apply(env, *arguments)
+    debug(apply_atom: symbol, env: env) do
+      if operation = env.fetch(symbol, nil)
+        debug found_in_environment: operation
+        operation.apply(env, *arguments)
+      else
+        debug returning_self: self
+        self
+      end
+    end
+  end
+
   def name
     symbol.to_s
   end

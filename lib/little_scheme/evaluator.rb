@@ -22,10 +22,18 @@ module LittleScheme
       end
     end
 
+    class Define
+      def apply(env, name, s_expression)
+        debug applying_define: name, s_expression: s_expression do
+          env[name.symbol] = s_expression.evaluate(env)
+        end
+      end
+    end
+
     class Lambda
       def apply(env, parameters, s_expression)
         debug applying_lambda: parameters, s_expression: s_expression, env: env do
-          Compiled.new(parameters, s_expression)
+          Compiled.new(parameters, s_expression, env)
         end
       end
 
@@ -35,15 +43,16 @@ module LittleScheme
       alias :inspect :to_s
 
       class Compiled
-        def initialize(parameters, s_expression)
+        def initialize(parameters, s_expression, original_env)
           @parameter_names = parameters.elements.map(&:symbol)
           @s_expression = s_expression
+          @original_env = original_env
         end
 
         def apply(env, *arguments)
           debug applying_compiled_lambda: @s_expression, env: env do
             evaluated_arguments = arguments.map { |a| a.evaluate(env) }
-            local_env = env.merge(Hash[@parameter_names.zip(evaluated_arguments)])
+            local_env = env.merge(@original_env).merge(Hash[@parameter_names.zip(evaluated_arguments)])
             @s_expression.evaluate(local_env)
           end
         end
@@ -126,6 +135,7 @@ module LittleScheme
         :'#t' => LittleScheme::True,
         :'#f' => LittleScheme::False,
 
+        define: Define.new,
         lambda: Lambda.new,
         cond: Cond.new,
         else: Else.new,
@@ -134,10 +144,13 @@ module LittleScheme
       }
     end
 
+    class EvaluationResult < Struct.new(:result, :environment); end
+
     def evaluate(s_expression, environment)
       environment = default_environment.merge(environment)
 
-      s_expression.evaluate(environment)
+      result = s_expression.evaluate(environment)
+      EvaluationResult.new(result, environment)
     end
   end
 end
