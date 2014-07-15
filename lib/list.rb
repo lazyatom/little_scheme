@@ -20,10 +20,9 @@ class List
   def evaluate(env)
     return self if elements.empty?
     operation, *arguments = elements
-    result = debug evaluating_list: to_s, env: env do
-      operation.evaluate(env)
-    end
-    debug applying_list_result: result do
+    debug evaluating_list: to_s, env: env do
+      result = operation.evaluate(env)
+      debug applying_list_result: result, with_arguments: arguments
       result.apply(env, *arguments)
     end
   end
